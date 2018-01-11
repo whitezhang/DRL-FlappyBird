@@ -38,6 +38,7 @@ def save2file(episodeMemory):
 	output = open('trainingData/' + ts, 'w')
 	output.writelines('\n'.join(episodeStr))
 
+
 # action:
 #	action[0] = 1 do nothing
 #	action[1] = 1 flip
