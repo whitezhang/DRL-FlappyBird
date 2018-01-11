@@ -106,7 +106,6 @@ class BrainDQN:
 		self.cost = tf.reduce_mean(tf.square(self.yInput - Q_Action))
 		self.trainStep = tf.train.AdamOptimizer(1e-6).minimize(self.cost)
 
-
 	def trainQNetwork(self):
 		# Step 1: obtain random minibatch from replay memory
 		minibatch = random.sample(self.replayMemory,BATCH_SIZE)
