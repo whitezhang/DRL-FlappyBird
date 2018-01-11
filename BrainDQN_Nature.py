@@ -108,8 +108,6 @@ class BrainDQN:
 
 
 	def trainQNetwork(self):
-
-		
 		# Step 1: obtain random minibatch from replay memory
 		minibatch = random.sample(self.replayMemory,BATCH_SIZE)
 		state_batch = [data[0] for data in minibatch]

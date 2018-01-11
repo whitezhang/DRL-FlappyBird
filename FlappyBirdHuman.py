@@ -1,7 +1,7 @@
 # -------------------------
-# Project: Deep Q-Learning on Flappy Bird
-# Author: Flood Sung
-# Date: 2016.3.21
+# Project: Human level control on Flappy Bird
+# Author: whitezhang
+# Date: 2018.1.1
 # -------------------------
 
 import cv2
@@ -12,6 +12,8 @@ from BrainDQN_Nature import BrainDQN
 import numpy as np
 import pygame
 from pygame.locals import *
+import time
+import datetime
 
 
 # preprocess raw image to 80*80 gray image
@@ -20,7 +22,28 @@ def preprocess(observation):
 	ret, observation = cv2.threshold(observation,1,255,cv2.THRESH_BINARY)
 	return np.reshape(observation,(80,80,1))
 
+
+def save2file(episodeMemory):
+	episodeStr = []
+	episodeLength = str(len(episodeMemory))
+	for memory in episodeMemory:
+		observation, action, reward = memory
+		sObservation = ','.join(map(str, observation.flatten()))
+		sAction = ','.join(map(str, action.flatten()))
+		sReward = str(reward)
+		ptr = [sObservation, sAction, sReward]
+		episodeStr.append('|'.join(ptr))
+
+	ts = str(datetime.datetime.now().strftime('%Y%m%d-%H%M%S-' + episodeLength))
+	output = open('trainingData/' + ts, 'w')
+	output.writelines('\n'.join(episodeStr))
+
+# action:
+#	action[0] = 1 do nothing
+#	action[1] = 1 flip
+# terminal: True/False
 def playFlappyBird():
+	episodeMemory = []
 	# Step 1: init BrainDQN
 	actions = 2
 	brain = BrainDQN(actions)
@@ -43,7 +66,13 @@ def playFlappyBird():
 			if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
 				pygame.quit()
 				sys.exit()
-		flappyBird.frame_step(action)
+		nextObservation, reward, terminal = flappyBird.frame_step(action)
+		nextObservation = preprocess(nextObservation)
+		if terminal:
+			save2file(episodeMemory)
+			episodeMemory = []
+		else:
+			episodeMemory.append([nextObservation, action, reward])
 
 def main():
 	playFlappyBird()
