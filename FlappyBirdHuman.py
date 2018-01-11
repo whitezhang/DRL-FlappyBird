@@ -6,6 +6,7 @@
 
 import cv2
 import sys
+import os
 sys.path.append("game/")
 import wrapped_flappy_bird as game
 from BrainDQN_Nature import BrainDQN
@@ -34,8 +35,11 @@ def save2file(episodeMemory):
 		ptr = [sObservation, sAction, sReward]
 		episodeStr.append('|'.join(ptr))
 
+	pathName = 'trainingData'
+	if not os.path.exists(pathName):
+		os.mkdir(pathName)
 	ts = str(datetime.datetime.now().strftime('%Y%m%d-%H%M%S-' + episodeLength))
-	output = open('trainingData/' + ts, 'w')
+	output = open(pathName + ts, 'w')
 	output.writelines('\n'.join(episodeStr))
 
 
