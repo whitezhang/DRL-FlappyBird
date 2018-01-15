@@ -1,9 +1,3 @@
-# -----------------------------
-# File: Deep Q-Learning Algorithm
-# Author: Flood Sung
-# Date: 2016.3.21
-# -----------------------------
-
 import tensorflow as tf 
 import numpy as np 
 import random
@@ -31,6 +25,8 @@ except:
 class BrainDQN:
 
 	def __init__(self,actions):
+		randob = np.zeros(shape=(80, 80))
+		self.currentState = np.stack((randob, randob, randob, randob), axis = 2)
 		# init replay memory
 		self.replayMemory = deque()
 		# init some parameters
@@ -157,8 +153,9 @@ class BrainDQN:
 		else:
 			state = "train"
 
-		print ("TIMESTEP", self.timeStep, "/ STATE", state, \
-            "/ EPSILON", self.epsilon)
+		if self.timeStep % 100 == 0:
+			print ("TIMESTEP", self.timeStep, "/ STATE", state, \
+            	"/ EPSILON", self.epsilon)
 
 		self.currentState = newState
 		self.timeStep += 1

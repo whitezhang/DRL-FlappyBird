@@ -26,20 +26,24 @@ def preprocess(observation):
 
 def save2file(episodeMemory):
 	episodeStr = []
-	episodeLength = str(len(episodeMemory))
+	episodeLength = len(episodeMemory)
 	for memory in episodeMemory:
-		observation, action, reward = memory
+		observation, action, reward, terminal = memory
 		sObservation = ','.join(map(str, observation.flatten()))
 		sAction = ','.join(map(str, action.flatten()))
 		sReward = str(reward)
-		ptr = [sObservation, sAction, sReward]
+		sTerminal = '1' if terminal else '0'
+		ptr = [sObservation, sAction, sReward, sTerminal]
 		episodeStr.append('|'.join(ptr))
+
+	if episodeLength < 30:
+		return
 
 	pathName = 'trainingData'
 	if not os.path.exists(pathName):
 		os.mkdir(pathName)
-	ts = str(datetime.datetime.now().strftime('%Y%m%d-%H%M%S-' + episodeLength))
-	output = open(pathName + ts, 'w')
+	ts = str(datetime.datetime.now().strftime('%Y%m%d-%H%M%S-' + str(episodeLength)))
+	output = open(os.path.join(pathName, ts), 'w')
 	output.writelines('\n'.join(episodeStr))
 
 
@@ -74,10 +78,11 @@ def playFlappyBird():
 		nextObservation, reward, terminal = flappyBird.frame_step(action)
 		nextObservation = preprocess(nextObservation)
 		if terminal:
+			episodeMemory.append([nextObservation, action, reward, terminal])
 			save2file(episodeMemory)
 			episodeMemory = []
 		else:
-			episodeMemory.append([nextObservation, action, reward])
+			episodeMemory.append([nextObservation, action, reward, terminal])
 
 def main():
 	playFlappyBird()
