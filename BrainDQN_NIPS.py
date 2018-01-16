@@ -22,6 +22,8 @@ BATCH_SIZE = 32 # size of minibatch
 class BrainDQN:
 
 	def __init__(self,actions):
+		randob = np.ones(shape=(80, 80, 1))
+		self.currentState = np.stack((randob, randob, randob, randob), axis = 2)
 		# init replay memory
 		self.replayMemory = deque()
 		# init some parameters
