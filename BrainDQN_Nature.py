@@ -1,7 +1,9 @@
-import tensorflow as tf 
-import numpy as np 
+import tensorflow as tf
+import numpy as np
 import random
-from collections import deque 
+from collections import deque
+import math
+import matplotlib.pyplot as plt
 
 # Hyper Parameters:
 FRAME_PER_ACTION = 1
@@ -196,4 +198,46 @@ class BrainDQN:
 
     def max_pool_2x2(self,x):
         return tf.nn.max_pool(x, ksize = [1, 2, 2, 1], strides = [1, 2, 2, 1], padding = "SAME")
+
+    def plot_conv_weights(self, weights, input_channel=0):
+        w = self.session.run(weights)
+        w_min = np.min(w)
+        w_max = np.max(w)
+        num_filters = w.shape[3]
+        num_grids = math.ceil(math.sqrt(num_filters))
+        fig, axes = plt.subplots(num_grids, num_grids)
+
+        for i, ax in enumerate(axes.flat):
+            if i < num_filters:
+                img = w[:, :, input_channel, i]
+
+                ax.imshow(img, vmin=w_min, vmax=w_max,
+                          interpolation='nearest', cmap='seismic')
+            ax.set_xticks([])
+            ax.set_yticks([])
+        plt.show()
+        
+    def plot_conv_layer(self, layer, image):
+        feed_dict = {x: [image]}
+        values = self.session.run(layer, feed_dict=feed_dict)
+        num_filters = values.shape[3]
+        num_grids = math.ceil(math.sqrt(num_filters))
+        fig, axes = plt.subplots(num_grids, num_grids)
+
+        for i, ax in enumerate(axes.flat):
+            if i < num_filters:
+                img = values[0, :, :, i]
+
+                ax.imshow(img, interpolation='nearest', cmap='binary')
+            ax.set_xticks([])
+            ax.set_yticks([])
+        plt.show()
+
+    def plot_image(image):
+        plt.imshow(image.reshape(img_shape),
+                   interpolation='nearest',
+                   cmap='binary')
+
+        plt.show()
+
         
