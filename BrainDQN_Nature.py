@@ -137,7 +137,6 @@ class BrainDQN:
 		if self.timeStep % UPDATE_TIME == 0:
 			self.copyTargetQNetwork()
 
-		
 	def setPerception(self,nextObservation,action,reward,terminal):
 		#newState = np.append(nextObservation,self.currentState[:,:,1:],axis = 2)
 		newState = np.append(self.currentState[:,:,1:],nextObservation,axis = 2)
