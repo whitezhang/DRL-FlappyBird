@@ -143,7 +143,7 @@ class BrainDQN:
         if self.timeStep % UPDATE_TIME == 0:
             self.copyTargetQNetwork()
 
-        
+
     def setPerception(self,nextObservation,action,reward,terminal):
         #newState = np.append(nextObservation,self.currentState[:,:,1:],axis = 2)
         newState = np.append(self.currentState[:,:,1:],nextObservation,axis = 2)
@@ -224,7 +224,7 @@ class BrainDQN:
             ax.set_xticks([])
             ax.set_yticks([])
         plt.show()
-        
+
     def plot_conv_layer(self, layer, image):
         feed_dict = {x: [image]}
         values = self.session.run(layer, feed_dict=feed_dict)
@@ -247,5 +247,3 @@ class BrainDQN:
                    cmap='binary')
 
         plt.show()
-
-        
