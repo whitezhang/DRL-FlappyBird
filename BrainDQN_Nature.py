@@ -36,10 +36,20 @@ class BrainDQN:
         self.epsilon = INITIAL_EPSILON
         self.actions = actions
         # init Q network
-        self.stateInput,self.QValue,self.W_conv1,self.b_conv1,self.W_conv2,self.b_conv2,self.W_conv3,self.b_conv3,self.W_fc1,self.b_fc1,self.W_fc2,self.b_fc2 = self.createQNetwork()
+        self.stateInput, self.QValue,\
+            self.W_conv1,self.b_conv1,\
+            self.W_conv2,self.b_conv2,\
+            self.W_conv3,self.b_conv3,\
+            self.W_fc1,self.b_fc1,\
+            self.W_fc2,self.b_fc2 = self.createQNetwork()
 
         # init Target Q Network
-        self.stateInputT,self.QValueT,self.W_conv1T,self.b_conv1T,self.W_conv2T,self.b_conv2T,self.W_conv3T,self.b_conv3T,self.W_fc1T,self.b_fc1T,self.W_fc2T,self.b_fc2T = self.createQNetwork()
+        self.stateInputT,self.QValueT,\
+            self.W_conv1T,self.b_conv1T,\
+            self.W_conv2T,self.b_conv2T,\
+            self.W_conv3T,self.b_conv3T,\
+            self.W_fc1T,self.b_fc1T,\
+            self.W_fc2T,self.b_fc2T = self.createQNetwork()
 
         self.copyTargetQNetworkOperation = [self.W_conv1T.assign(self.W_conv1),self.b_conv1T.assign(self.b_conv1),self.W_conv2T.assign(self.W_conv2),self.b_conv2T.assign(self.b_conv2),self.W_conv3T.assign(self.W_conv3),self.b_conv3T.assign(self.b_conv3),self.W_fc1T.assign(self.W_fc1),self.b_fc1T.assign(self.b_fc1),self.W_fc2T.assign(self.W_fc2),self.b_fc2T.assign(self.b_fc2)]
 
@@ -75,7 +85,6 @@ class BrainDQN:
         b_fc2 = self.bias_variable([self.actions])
 
         # input layer
-
         stateInput = tf.placeholder("float",[None,80,80,4])
 
         # hidden layers
@@ -121,16 +130,15 @@ class BrainDQN:
                 y_batch.append(reward_batch[i])
             else:
                 y_batch.append(reward_batch[i] + GAMMA * np.max(QValue_batch[i]))
-
         self.trainStep.run(feed_dict={
             self.yInput : y_batch,
             self.actionInput : action_batch,
             self.stateInput : state_batch
             })
-
         # save network every 100000 iteration
         if self.timeStep % 10000 == 0:
             self.saver.save(self.session, 'saved_networks/' + 'network' + '-dqn', global_step = self.timeStep)
+
 
         if self.timeStep % UPDATE_TIME == 0:
             self.copyTargetQNetwork()
