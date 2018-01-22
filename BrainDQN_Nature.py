@@ -164,8 +164,9 @@ class BrainDQN:
             state = "train"
 
         if self.timeStep % 100 == 0:
+            QValue = self.calQValue()
             print ("TIMESTEP", self.timeStep, "/ STATE", state, \
-                "/ EPSILON", self.epsilon)
+                "/ EPSILON", self.epsilon, "/ Value", QValue[0], QValue[1])
 
         self.currentState = newState
         self.timeStep += 1
@@ -189,6 +190,12 @@ class BrainDQN:
             self.epsilon -= (INITIAL_EPSILON - FINAL_EPSILON)/EXPLORE
 
         return action
+
+    def calQValue(self):
+        states = [data[3] for data in self.replayMemory]
+        for i in range(len(states)):
+            QValue = self.QValue.eval(feed_dict={self.stateInput:[states[i]]})[0]
+        return QValue
 
     def setInitState(self,observation):
         self.currentState = np.stack((observation, observation, observation, observation), axis = 2)
