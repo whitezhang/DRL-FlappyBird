@@ -135,6 +135,7 @@ class BrainDQN:
             self.actionInput : action_batch,
             self.stateInput : state_batch
             })
+        self.cal_acc()
         # save network every 100000 iteration
         if self.timeStep % 10000 == 0:
             self.saver.save(self.session, 'saved_networks/' + 'network' + '-dqn', global_step = self.timeStep)
@@ -164,9 +165,8 @@ class BrainDQN:
             state = "train"
 
         if self.timeStep % 100 == 0:
-            QValue = self.calQValue()
             print ("TIMESTEP", self.timeStep, "/ STATE", state, \
-                "/ EPSILON", self.epsilon, "/ Value", QValue[0], QValue[1])
+                "/ EPSILON", self.epsilon)
 
         self.currentState = newState
         self.timeStep += 1
@@ -191,11 +191,14 @@ class BrainDQN:
 
         return action
 
-    def calQValue(self):
+    def calQValues(self):
         states = [data[3] for data in self.replayMemory]
+        QValues = [[], []]
         for i in range(len(states)):
             QValue = self.QValue.eval(feed_dict={self.stateInput:[states[i]]})[0]
-        return QValue
+            QValues[0].append(QValue[0])
+            QValues[1].append(QValue[1])
+        return QValues
 
     def setInitState(self,observation):
         self.currentState = np.stack((observation, observation, observation, observation), axis = 2)
@@ -213,6 +216,21 @@ class BrainDQN:
 
     def max_pool_2x2(self,x):
         return tf.nn.max_pool(x, ksize = [1, 2, 2, 1], strides = [1, 2, 2, 1], padding = "SAME")
+
+    def cal_acc(self):
+        states = [data[0] for data in self.replayMemory]
+        actions = [data[1] for data in self.replayMemory]
+        rewards = [data[2] for data in self.replayMemory]
+        next_states = [data[3] for data in self.replayMemory]
+        QValue = self.QValueT.eval(feed_dict={self.stateInputT: states})
+        acc = 0
+        for i in range(len(states)):
+            #print actions[0][0]
+            if QValue[i][0] > QValue[i][1] and actions[i][0] == 1:
+                acc += 1
+            elif QValue[i][0] < QValue[i][1] and actions[i][1] == 1:
+                acc += 1
+        print acc, len(states), 1.*acc/len(states)
 
     def plot_conv_weights(self, weights, input_channel=0):
         w = self.session.run(weights)
