@@ -108,20 +108,21 @@ class BrainDQN:
 
     def createTrainingMethod(self):
         self.actionInput = tf.placeholder("float",[None,self.actions])
-        self.yInput = tf.placeholder("float", [None]) 
+        self.yInput = tf.placeholder("float", [None])
         Q_Action = tf.reduce_sum(tf.mul(self.QValue, self.actionInput), reduction_indices = 1)
         self.cost = tf.reduce_mean(tf.square(self.yInput - Q_Action))
         self.trainStep = tf.train.AdamOptimizer(1e-6).minimize(self.cost)
 
     def trainQNetwork(self):
         # Step 1: obtain random minibatch from replay memory
+        BATCH_SIZE = 1360
         minibatch = random.sample(self.replayMemory,BATCH_SIZE)
         state_batch = [data[0] for data in minibatch]
         action_batch = [data[1] for data in minibatch]
         reward_batch = [data[2] for data in minibatch]
         nextState_batch = [data[3] for data in minibatch]
 
-        # Step 2: calculate y 
+        # Step 2: calculate y
         y_batch = []
         QValue_batch = self.QValueT.eval(feed_dict={self.stateInputT:nextState_batch})
         for i in range(0,BATCH_SIZE):
@@ -130,12 +131,20 @@ class BrainDQN:
                 y_batch.append(reward_batch[i])
             else:
                 y_batch.append(reward_batch[i] + GAMMA * np.max(QValue_batch[i]))
+        _, loss = self.session.run([self.trainStep, self.cost],
+            feed_dict={
+            self.yInput : y_batch,
+            self.actionInput : action_batch,
+            self.stateInput : state_batch
+            })
+        print ("loss: ", loss)
+        """
         self.trainStep.run(feed_dict={
             self.yInput : y_batch,
             self.actionInput : action_batch,
             self.stateInput : state_batch
             })
-        self.cal_acc()
+        """
         # save network every 100000 iteration
         if self.timeStep % 10000 == 0:
             self.saver.save(self.session, 'saved_networks/' + 'network' + '-dqn', global_step = self.timeStep)
@@ -144,9 +153,19 @@ class BrainDQN:
         if self.timeStep % UPDATE_TIME == 0:
             self.copyTargetQNetwork()
 
+    def loadPreviousMemory(self, nextObservation, action, reward, terminal):
+        newState = np.append(self.currentState[:,:,1:],nextObservation,axis = 2)
+        self.replayMemory.append((self.currentState,action,reward,newState,terminal))
+        self.currentState = newState
 
-    def setPerception(self,nextObservation,action,reward,terminal):
-        #newState = np.append(nextObservation,self.currentState[:,:,1:],axis = 2)
+    def trainPreviousMemory(self, maxiter):
+        print ("Start Pre-training:", maxiter, "Memory size: ", len(self.replayMemory))
+        for i in range(maxiter):
+            self.trainQNetwork()
+            self.outputAcc()
+            self.outputQValues()
+
+    def setPerception(self, nextObservation, action, reward, terminal):
         newState = np.append(self.currentState[:,:,1:],nextObservation,axis = 2)
         self.replayMemory.append((self.currentState,action,reward,newState,terminal))
         if len(self.replayMemory) > REPLAY_MEMORY:
@@ -191,13 +210,16 @@ class BrainDQN:
 
         return action
 
-    def calQValues(self):
+    def outputQValues(self):
         states = [data[3] for data in self.replayMemory]
         QValues = [[], []]
         for i in range(len(states)):
             QValue = self.QValue.eval(feed_dict={self.stateInput:[states[i]]})[0]
             QValues[0].append(QValue[0])
             QValues[1].append(QValue[1])
+        avgQValue0 = sum(QValues[0])/len(QValues[0])
+        avgQValue1 = sum(QValues[1])/len(QValues[1])
+        print ('Qvalue: ', avgQValue0, avgQValue1)
         return QValues
 
     def setInitState(self,observation):
@@ -217,7 +239,7 @@ class BrainDQN:
     def max_pool_2x2(self,x):
         return tf.nn.max_pool(x, ksize = [1, 2, 2, 1], strides = [1, 2, 2, 1], padding = "SAME")
 
-    def cal_acc(self):
+    def outputAcc(self):
         states = [data[0] for data in self.replayMemory]
         actions = [data[1] for data in self.replayMemory]
         rewards = [data[2] for data in self.replayMemory]
@@ -225,12 +247,12 @@ class BrainDQN:
         QValue = self.QValueT.eval(feed_dict={self.stateInputT: states})
         acc = 0
         for i in range(len(states)):
-            #print actions[0][0]
+            #print QValue[i][0], QValue[i][1], actions[i][0], actions[i][1]
             if QValue[i][0] > QValue[i][1] and actions[i][0] == 1:
                 acc += 1
             elif QValue[i][0] < QValue[i][1] and actions[i][1] == 1:
                 acc += 1
-        print acc, len(states), 1.*acc/len(states)
+        print ('States: ', len(states), 'Accuracy: ', 1.*acc/len(states), 'Num: ', acc)
 
     def plot_conv_weights(self, weights, input_channel=0):
         w = self.session.run(weights)

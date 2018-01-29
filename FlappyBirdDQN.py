@@ -4,10 +4,10 @@
 # Date: 2018.1.1
 # -------------------------
 
-import cv2
+#import cv2
 import sys
 sys.path.append("game/")
-import wrapped_flappy_bird as game
+#import wrapped_flappy_bird as game
 from BrainDQN_Nature import BrainDQN
 import numpy as np
 import os
@@ -31,7 +31,9 @@ def preTraining(brain, pathname='./trainingData/'):
                     action = np.array([actionTmp[0], actionTmp[1]])
                     reward = float(sReward)
                     terminal = True if sTerminal == 1 else False
-                    brain.setPerception(observation, action, reward, terminal)
+                    brain.loadPreviousMemory(observation, action, reward, terminal)
+    brain.trainPreviousMemory(maxiter=1000)
+
     return brain
 
 
@@ -40,6 +42,7 @@ def playFlappyBird():
     actions = 2
     brain = BrainDQN(actions)
     brain = preTraining(brain)
+    return
     # Step 2: init Flappy Bird Game
     flappyBird = game.GameState()
     # Step 3: play game
